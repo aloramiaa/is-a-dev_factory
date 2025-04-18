@@ -8,7 +8,7 @@
 
 A modern, elegant web application for registering and managing free `.is-a.dev` domains. Simplify the process of claiming your developer subdomain with our streamlined interface.
 
-![is-a.dev Factory Screenshot](https://via.placeholder.com/800x400?text=is-a.dev+Factory+Screenshot)
+![is-a.dev Factory Screenshot](https://cdn.discordapp.com/attachments/1360496758760804566/1362802946701656405/image.png?ex=6803b8a6&is=68026726&hm=081b4675be7d2d877f1e4907d7057fa15f57b64d1a65b43d2a5694ef4f477479&)
 
 ## ✨ Features
 
@@ -28,6 +28,18 @@ A modern, elegant web application for registering and managing free `.is-a.dev` 
 - **Domain Management** - View and manage your existing domains
 - **Mobile-Friendly Interface** - Responsive design that works on all devices
 
+### Showcase Your Website Automatically
+
+We've added a powerful new feature that enhances how you register your domain:
+
+- **Automatic Screenshot Embedding** - Website screenshots are now automatically included in your PR for non-email domains
+- **Privacy-First Approach** - Screenshots are stored in your own GitHub repository, not in the main is-a.dev registry
+- **Review-Friendly** - Makes the PR review process smoother by providing visual context
+- **Email-Domain Exception** - Email-only domains (MX records only) are automatically exempted from the screenshot requirement
+- **Custom Repository Storage** - Images are stored in a dedicated `domain-screenshots` repository in your GitHub account
+
+> 💡 **Pro Tip:** Make your screenshot showcase your site's best features to help reviewers understand your domain usage better!
+
 ## 🚀 Getting Started
 
 ### Prerequisites
@@ -40,7 +52,7 @@ A modern, elegant web application for registering and managing free `.is-a.dev` 
 
 1. **Clone the repository**
    ```bash
-   git clone https://github.com/al/is-a-dev_factory.git
+   git clone https://github.com/aloramiaa/is-a-dev_factory.git
    cd is-a-dev_factory
    ```
 
