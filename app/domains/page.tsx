@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useCallback } from "react"
+import { useState, useEffect, useCallback, Suspense } from "react"
 import { motion } from "framer-motion"
 import { Globe, Loader2, ChevronLeft, ChevronRight } from "lucide-react"
 import { BackgroundGrid } from "@/components/background-grid"
@@ -36,7 +36,7 @@ interface PaginationData {
 
 const PAGE_SIZE_OPTIONS = [24, 48, 96, 192]
 
-export default function DomainsPage() {
+function DomainsPageContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   
@@ -334,5 +334,17 @@ export default function DomainsPage() {
         </div>
       </div>
     </main>
+  )
+}
+
+export default function DomainsPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center bg-black">
+        <Loader2 className="h-8 w-8 animate-spin text-purple-500" />
+      </div>
+    }>
+      <DomainsPageContent />
+    </Suspense>
   )
 }
