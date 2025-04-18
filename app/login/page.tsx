@@ -1,16 +1,17 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, Suspense } from "react"
 import { signIn, signOut, useSession } from "next-auth/react"
 import { motion } from "framer-motion"
-import { Github, LogOut } from "lucide-react"
+import { Github, LogOut, Loader2 } from "lucide-react"
 import { NeonGlow } from "@/components/neon-glow"
 import { GlitchText } from "@/components/glitch-text"
 import { CyberButton } from "@/components/cyber-button"
 import { BackgroundGrid } from "@/components/background-grid"
 import { useSearchParams } from "next/navigation"
 
-export default function LoginPage() {
+// Create a client component that uses useSearchParams
+function LoginContent() {
   const [isLoading, setIsLoading] = useState(false)
   const { data: session, status } = useSession()
   const searchParams = useSearchParams()
@@ -97,5 +98,18 @@ export default function LoginPage() {
         </div>
       </motion.div>
     </main>
+  )
+}
+
+// Export the page component with Suspense
+export default function LoginPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center bg-black">
+        <Loader2 className="h-8 w-8 animate-spin text-purple-500" />
+      </div>
+    }>
+      <LoginContent />
+    </Suspense>
   )
 }
