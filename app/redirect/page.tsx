@@ -1,15 +1,15 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, Suspense } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { motion } from "framer-motion"
-import { AlertTriangle, ExternalLink } from "lucide-react"
+import { AlertTriangle, ExternalLink, Loader2 } from "lucide-react"
 import { BackgroundGrid } from "@/components/background-grid"
 import { NeonGlow } from "@/components/neon-glow"
 import { GlitchText } from "@/components/glitch-text"
 import { CyberButton } from "@/components/cyber-button"
 
-export default function RedirectPage() {
+function RedirectContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const domain = searchParams.get("domain")
@@ -106,5 +106,17 @@ export default function RedirectPage() {
         </div>
       </motion.div>
     </main>
+  )
+} 
+
+export default function RedirectPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center bg-black">
+        <Loader2 className="h-8 w-8 animate-spin text-purple-500" />
+      </div>
+    }>
+      <RedirectContent />
+    </Suspense>
   )
 } 
