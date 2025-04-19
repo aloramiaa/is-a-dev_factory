@@ -163,10 +163,6 @@ export default function Home() {
           </Tabs>
         </motion.div>
       </div>
-
-      <footer className="relative z-10 border-t border-purple-800 mt-8 py-6 text-center text-purple-400 text-xs sm:text-sm">
-        <p>Built with 💜 for the developer community</p>
-      </footer>
     </main>
   )
 }

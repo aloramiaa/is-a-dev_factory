@@ -5,6 +5,7 @@ import "./globals.css"
 import { ThemeProvider } from "@/components/theme-provider"
 import { AuthProvider } from "@/components/auth-provider"
 import { Toaster } from "@/components/ui/toaster"
+import { Footer } from "@/components/footer"
 
 const inter = Inter({ subsets: ["latin"] })
 
@@ -24,7 +25,12 @@ export default function RootLayout({
       <body className={inter.className}>
         <AuthProvider>
           <ThemeProvider attribute="class" defaultTheme="dark" enableSystem={false} disableTransitionOnChange>
-            {children}
+            <div className="min-h-screen flex flex-col bg-black">
+              <div className="flex-grow">
+                {children}
+              </div>
+              <Footer />
+            </div>
             <Toaster />
           </ThemeProvider>
         </AuthProvider>
