@@ -39,24 +39,21 @@ A modern, elegant web application for registering and managing free `.is-a.dev` 
 - **Automated Pull Request Creation** - Submit your domain registration directly to the is-a.dev registry
 - **Domain Management** - View and manage your existing domains
 - **Mobile-Friendly Interface** - Responsive design that works on all devices
+- **Cyberpunk UI/UX** - Sleek, modern design with neon glow effects and glitch animations
 
 ### Showcase Your Website Automatically
 
-We've added a powerful new feature that enhances how you register your domain:
-
-- **Automatic Screenshot Embedding** - Website screenshots are now automatically included in your PR for non-email domains
+- **Automatic Screenshot Embedding** - Website screenshots are automatically included in your PR for non-email domains
 - **Privacy-First Approach** - Screenshots are stored in your own GitHub repository, not in the main is-a.dev registry
 - **Review-Friendly** - Makes the PR review process smoother by providing visual context
 - **Email-Domain Exception** - Email-only domains (MX records only) are automatically exempted from the screenshot requirement
 - **Custom Repository Storage** - Images are stored in a dedicated `domain-screenshots` repository in your GitHub account
 
-> 💡 **Pro Tip:** Make your screenshot showcase your site's best features to help reviewers understand your domain usage better!
-
 ## 🚀 Getting Started
 
 ### Prerequisites
 
-- Node.js 18+ and npm/yarn
+- Node.js 18+ and npm/pnpm
 - GitHub account
 - Git
 
@@ -70,9 +67,9 @@ We've added a powerful new feature that enhances how you register your domain:
 
 2. **Install dependencies**
    ```bash
-   npm install
+   pnpm install
    # or
-   yarn install
+   npm install
    ```
 
 3. **Set up GitHub OAuth**
@@ -100,9 +97,9 @@ We've added a powerful new feature that enhances how you register your domain:
 
 5. **Run the development server**
    ```bash
-   npm run dev
+   pnpm dev
    # or
-   yarn dev
+   npm run dev
    ```
 
 6. **Open your browser**
@@ -135,24 +132,33 @@ GITHUB_API_TOKEN=your_github_personal_access_token
 
 ### Deployment Steps
 
+#### Option 1: Vercel (Recommended)
+
+1. Fork the repository to your GitHub account
+2. Create a new project in Vercel and link it to your forked repository
+3. Configure the environment variables in the Vercel dashboard
+4. Deploy the project
+
+#### Option 2: Manual Deployment
+
 1. **Build the application**
    ```bash
-   npm run build
+   pnpm build
    # or
-   yarn build
+   npm run build
    ```
 
 2. **Start the production server**
    ```bash
-   npm start
+   pnpm start
    # or
-   yarn start
+   npm start
    ```
 
-### Deployment Platforms
+### Supported Deployment Platforms
 
 The app can be easily deployed to:
-- [Vercel](https://vercel.com)
+- [Vercel](https://vercel.com) (recommended)
 - [Netlify](https://netlify.com)
 - [Railway](https://railway.app)
 - Any platform supporting Next.js applications
@@ -174,27 +180,54 @@ The app can be easily deployed to:
   - [Octokit](https://github.com/octokit/rest.js) - GitHub API client
   - [Server Actions](https://nextjs.org/docs/app/building-your-application/data-fetching/server-actions) - Next.js server actions for API calls
 
-- **Developer Experience**
-  - [ESLint](https://eslint.org/) - Code linting
-  - [Prettier](https://prettier.io/) - Code formatting
+- **UI/UX Components**
+  - [Radix UI](https://www.radix-ui.com/) - Headless UI primitives
+  - [Lucide React](https://lucide.dev/) - Icon library
+  - [react-hook-form](https://react-hook-form.com/) - Form validation
+  - [Zod](https://zod.dev/) - Schema validation
 
 ## 📂 Project Structure
 
 ```
 is-a-dev_factory/
-├── app/                 # Next.js App Router
-│   ├── actions/         # Server actions
-│   ├── api/             # API routes
-│   ├── components/      # UI components
-│   ├── page.tsx         # Home page
-│   └── ...
-├── public/              # Static assets
-├── types/               # TypeScript type definitions
-├── styles/              # Global styles
-├── next.config.js       # Next.js configuration
-├── tailwind.config.js   # Tailwind CSS configuration
-└── package.json         # Project dependencies
+├── app/                  # Next.js App Router
+│   ├── actions/          # Server actions for GitHub operations
+│   ├── api/              # API routes
+│   ├── components/       # App-specific UI components
+│   ├── dashboard/        # Dashboard page for managing domains
+│   ├── login/            # Login page
+│   ├── docs/             # Documentation pages
+│   ├── domains/          # Domain management pages
+│   ├── page.tsx          # Home page
+│   └── layout.tsx        # Root layout
+├── components/           # Shared UI components
+├── hooks/                # Custom React hooks
+├── lib/                  # Utility libraries
+├── public/               # Static assets
+├── styles/               # Global styles
+├── types/                # TypeScript type definitions
+├── utils/                # Helper functions
+└── middleware.ts         # NextAuth middleware
 ```
+
+## 🔧 Configuration Files
+
+- **next.config.mjs** - Next.js configuration
+- **tailwind.config.ts** - Tailwind CSS configuration
+- **components.json** - shadcn/ui configuration
+- **tsconfig.json** - TypeScript configuration
+- **.env.local** - Local environment variables
+- **.env.production** - Production environment variables
+
+## 📝 Domain Registration Process
+
+1. **Authentication** - Sign in with your GitHub account
+2. **Subdomain Selection** - Choose your desired `yourname.is-a.dev` subdomain
+3. **Record Configuration** - Set up DNS records or redirect options
+4. **Website Screenshot** - Automatically captures a screenshot of your website (for non-email domains)
+5. **Pull Request Creation** - Submits a PR to the official is-a.dev registry
+6. **Review Process** - Wait for the maintainers to review and merge your PR
+7. **Domain Activation** - Once merged, your domain will be active within 24 hours
 
 ## 🤝 Contributing
 
@@ -206,14 +239,14 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 4. Push to the branch (`git push origin feature/amazing-feature`)
 5. Open a Pull Request
 
-## 📝 License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
 ## 📚 Related Resources
 
 - [is-a.dev Registry](https://github.com/is-a-dev/register) - The official registry repository
 - [is-a.dev Documentation](https://is-a.dev/docs) - Official documentation for the is-a.dev service
+
+## 📝 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
 ---
 

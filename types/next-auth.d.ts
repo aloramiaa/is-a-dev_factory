@@ -8,7 +8,12 @@ declare module "next-auth" {
       name?: string | null
       email?: string | null
       image?: string | null
+      githubUsername?: string
     }
+  }
+  
+  interface Profile {
+    login?: string
   }
 }
 
@@ -17,5 +22,6 @@ declare module "next-auth/jwt" {
     accessToken?: string
     name?: string
     email?: string
+    githubUsername?: string
   }
 }

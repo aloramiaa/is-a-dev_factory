@@ -227,6 +227,9 @@ export default function DashboardPage() {
                   <RefreshCw size={16} className="mr-2 sm:mr-0" />
                   <span className="sm:hidden">Refresh</span>
                 </CyberButton>
+                <Link href="/dashboard/my-prs" className="flex-1 sm:flex-initial">
+                  <CyberButton variant="outline" className="w-full">My PRs</CyberButton>
+                </Link>
                 <Link href="/" className="flex-1 sm:flex-initial">
                   <CyberButton className="w-full">Register New Domain</CyberButton>
                 </Link>

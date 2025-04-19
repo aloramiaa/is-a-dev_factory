@@ -4,7 +4,7 @@ import { useState } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { signOut, useSession } from "next-auth/react"
-import { Github, LogOut, User, Database, Menu, X } from "lucide-react"
+import { Github, LogOut, User, Database, Menu, X, GitPullRequest } from "lucide-react"
 import { NeonGlow } from "@/components/neon-glow"
 import { GlitchText } from "@/components/glitch-text"
 import { CyberButton } from "@/components/cyber-button"
@@ -100,6 +100,12 @@ export function NavBar() {
                   <Link href="/dashboard" className="flex items-center gap-2">
                     <Database size={16} />
                     <span>My Domains</span>
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link href="/dashboard/my-prs" className="flex items-center gap-2">
+                    <GitPullRequest size={16} />
+                    <span>My Pull Requests</span>
                   </Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>

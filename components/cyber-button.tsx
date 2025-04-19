@@ -1,12 +1,20 @@
 import type React from "react"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
+import { type ButtonProps } from "@/components/ui/button"
 
-interface CyberButtonProps extends React.ComponentProps<typeof Button> {
+interface CyberButtonProps extends Omit<ButtonProps, 'variant'> {
   variant?: "default" | "large" | "outline" | "ghost"
+  size?: "default" | "sm" | "lg" | "icon"
 }
 
-export function CyberButton({ children, className, variant = "default", ...props }: CyberButtonProps) {
+export function CyberButton({ 
+  children, 
+  className, 
+  variant = "default", 
+  size = "default",
+  ...props 
+}: CyberButtonProps) {
   const baseStyles =
     "relative overflow-hidden cyber-border bg-black text-purple-300 hover:text-white transition-all duration-300"
 
@@ -19,8 +27,16 @@ export function CyberButton({ children, className, variant = "default", ...props
     ghost: "bg-transparent hover:bg-purple-900/20 border-none shadow-none",
   }
 
+  // Map our custom variants to the built-in Button variants
+  const buttonVariant = variant === 'large' ? 'default' : variant;
+
   return (
-    <Button className={cn(baseStyles, variantStyles[variant as keyof typeof variantStyles], className)} {...props}>
+    <Button 
+      className={cn(baseStyles, variantStyles[variant as keyof typeof variantStyles], className)} 
+      size={size}
+      variant={buttonVariant as ButtonProps['variant']}
+      {...props}
+    >
       {children}
     </Button>
   )
