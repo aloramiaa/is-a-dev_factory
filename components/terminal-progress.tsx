@@ -43,22 +43,22 @@ export function TerminalProgress({ steps, isOpen, onClose }: TerminalProgressPro
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         exit={{ opacity: 0, y: 20 }}
-        className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+        className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-2 sm:p-4"
       >
         <motion.div
           initial={{ scale: 0.9 }}
           animate={{ scale: 1 }}
-          className="w-full max-w-2xl bg-black border border-purple-600 rounded-lg shadow-2xl shadow-purple-800/30 overflow-hidden"
+          className="w-full max-w-2xl max-h-[95vh] bg-black border border-purple-600 rounded-lg shadow-2xl shadow-purple-800/30 overflow-hidden"
         >
           {/* Terminal header */}
-          <div className="flex items-center justify-between bg-purple-900/60 px-4 py-2 border-b border-purple-600">
+          <div className="flex items-center justify-between bg-purple-900/60 px-3 sm:px-4 py-2 border-b border-purple-600">
             <div className="flex items-center gap-2">
               <Terminal className="h-4 w-4 text-purple-300" />
-              <span className="text-purple-300 font-mono text-sm">is-a.dev domain registration</span>
+              <span className="text-purple-300 font-mono text-xs sm:text-sm truncate">is-a.dev domain registration</span>
             </div>
             <button 
               onClick={onClose} 
-              className="text-purple-300 hover:text-white focus:outline-none"
+              className="text-purple-300 hover:text-white focus:outline-none text-xl leading-none px-1"
             >
               ×
             </button>
@@ -67,7 +67,7 @@ export function TerminalProgress({ steps, isOpen, onClose }: TerminalProgressPro
           {/* Terminal content */}
           <div 
             ref={containerRef}
-            className="bg-black p-4 font-mono text-sm text-green-400 h-80 overflow-y-auto flex flex-col gap-1"
+            className="bg-black p-3 sm:p-4 font-mono text-xs sm:text-sm text-green-400 h-[60vh] sm:h-80 overflow-y-auto flex flex-col gap-1"
           >
             {steps.map((step) => (
               <div key={step.id} className="flex items-start gap-2">
@@ -85,7 +85,7 @@ export function TerminalProgress({ steps, isOpen, onClose }: TerminalProgressPro
                     <span className="text-purple-400">$</span>
                   )}
                 </div>
-                <div className="flex-1">
+                <div className="flex-1 break-words">
                   {step.message}
                   {step.status === "loading" && (
                     <span className={blinkCursor ? "opacity-100" : "opacity-0"}>_</span>

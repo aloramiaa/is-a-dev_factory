@@ -144,16 +144,16 @@ export default function DashboardPage() {
       <BackgroundGrid />
       <NavBar />
 
-      <div className="container mx-auto px-4 py-24 relative z-10">
-        <header className="text-center mb-12">
+      <div className="container mx-auto px-4 pt-20 pb-12 md:py-24 relative z-10">
+        <header className="text-center mb-8 md:mb-12">
           <motion.div
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8 }}
-            className="mb-6"
+            className="mb-4 md:mb-6"
           >
             <NeonGlow>
-              <GlitchText className="text-5xl md:text-6xl font-bold tracking-tighter" text="Your Domains" />
+              <GlitchText className="text-4xl sm:text-5xl md:text-6xl font-bold tracking-tighter" text="Your Domains" />
             </NeonGlow>
           </motion.div>
 
@@ -161,7 +161,7 @@ export default function DashboardPage() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.4, duration: 0.8 }}
-            className="text-xl text-purple-300 max-w-2xl mx-auto"
+            className="text-base sm:text-lg md:text-xl text-purple-300 max-w-2xl mx-auto"
           >
             Manage all your .is-a.dev subdomains in one place
           </motion.p>
@@ -171,17 +171,17 @@ export default function DashboardPage() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 0.6, duration: 0.8 }}
-              className="text-sm text-purple-400 mt-4 max-w-xl mx-auto"
+              className="text-xs sm:text-sm text-purple-400 mt-4 max-w-xl mx-auto"
             >
               <p className="mb-2">Username information used for matching:</p>
-              <div className="bg-black/60 backdrop-blur-sm border border-purple-900 rounded-md p-2 text-left font-mono">
+              <div className="bg-black/60 backdrop-blur-sm border border-purple-900 rounded-md p-2 text-center sm:text-left font-mono">
                 <p><span className="text-purple-500">Raw:</span> {usernameDebug.rawUsername}</p>
                 <p><span className="text-purple-500">Normalized:</span> {usernameDebug.username}</p>
                 <p><span className="text-purple-500">GitHub:</span> {usernameDebug.gitHubUsername}</p>
               </div>
-              <p className="mt-2 text-xs">
+              <p className="mt-2 text-xs text-center sm:text-left">
                 If these don't match your GitHub username, 
-                your domains might not be found. Your GitHub username should be <span className="text-purple-300">aloramiaa</span>.
+                your domains might not be found. Your GitHub username should be <span className="text-purple-300">{usernameDebug.username.toLowerCase()}b</span>.
               </p>
             </motion.div>
           ) : session?.user?.name && (
@@ -212,22 +212,23 @@ export default function DashboardPage() {
             </div>
           )}
 
-          <div className="bg-black/60 backdrop-blur-sm border border-purple-500 rounded-md p-6">
-            <div className="flex justify-between items-center mb-8">
-              <div>
-                <h2 className="text-2xl font-bold text-purple-400">Your Registered Domains</h2>
+          <div className="bg-black/60 backdrop-blur-sm border border-purple-500 rounded-md p-4 sm:p-6">
+            <div className="flex flex-col sm:flex-row justify-between items-center mb-6 sm:mb-8 gap-4">
+              <div className="text-center sm:text-left">
+                <h2 className="text-xl sm:text-2xl font-bold text-purple-400">Your Registered Domains</h2>
                 {userDomains.length > 0 && (
                   <p className="text-sm text-purple-300 mt-1">
                     You have {userDomains.length} registered domain{userDomains.length === 1 ? '' : 's'}
                   </p>
                 )}
               </div>
-              <div className="flex gap-2">
-                <CyberButton onClick={fetchUserDomains} variant="outline" title="Refresh domains">
-                  <RefreshCw size={16} />
+              <div className="flex gap-3 w-full sm:w-auto">
+                <CyberButton onClick={fetchUserDomains} variant="outline" title="Refresh domains" className="flex-1 sm:flex-initial">
+                  <RefreshCw size={16} className="mr-2 sm:mr-0" />
+                  <span className="sm:hidden">Refresh</span>
                 </CyberButton>
-                <Link href="/">
-                  <CyberButton>Register New Domain</CyberButton>
+                <Link href="/" className="flex-1 sm:flex-initial">
+                  <CyberButton className="w-full">Register New Domain</CyberButton>
                 </Link>
               </div>
             </div>
@@ -237,19 +238,19 @@ export default function DashboardPage() {
                 {userDomains.map((domain) => (
                   <div
                     key={domain.name}
-                    className="p-4 border border-purple-800 rounded-md bg-black/40 hover:bg-black/60 transition-all"
+                    className="p-3 sm:p-4 border border-purple-800 rounded-md bg-black/40 hover:bg-black/60 transition-all"
                   >
-                    <div className="flex items-center justify-between mb-3">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3">
                       <div className="flex items-center gap-3">
-                        <Globe className="text-purple-400" />
-                        <div>
-                          <h3 className="font-bold text-lg text-white">{domain.name}.is-a.dev</h3>
-                          <p className="text-sm text-purple-300">
-                            {truncateString(domain.description || domain.domain, 60)}
+                        <Globe className="text-purple-400 flex-shrink-0" />
+                        <div className="overflow-hidden">
+                          <h3 className="font-bold text-base sm:text-lg text-white truncate">{domain.name}.is-a.dev</h3>
+                          <p className="text-xs sm:text-sm text-purple-300 truncate">
+                            {truncateString(domain.description || domain.domain, 40)}
                           </p>
                         </div>
                       </div>
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-2 ml-6 sm:ml-0">
                         <TooltipProvider>
                           <Tooltip>
                             <TooltipTrigger asChild>
@@ -257,9 +258,11 @@ export default function DashboardPage() {
                                 href={getDomainUrl(domain.name)}
                                 target={shouldShowWarning(domain.name) ? "_self" : "_blank"}
                                 rel="noopener noreferrer"
-                                className="text-blue-400 hover:underline flex items-center gap-1"
+                                className="text-blue-400 hover:underline flex items-center gap-1 text-sm"
                               >
-                                {domain.name}.is-a.dev <ExternalLink size={14} />
+                                <span className="hidden sm:inline">{domain.name}.is-a.dev</span>
+                                <span className="sm:hidden">Visit</span>
+                                <ExternalLink size={14} />
                               </a>
                             </TooltipTrigger>
                             <TooltipContent>
@@ -277,7 +280,7 @@ export default function DashboardPage() {
                                 rel="noopener noreferrer"
                                 className="p-2 text-purple-300 hover:text-purple-200 hover:bg-purple-900/30 rounded-md"
                               >
-                                <Edit size={18} />
+                                <Edit size={16} />
                               </a>
                             </TooltipTrigger>
                             <TooltipContent>
@@ -310,8 +313,8 @@ export default function DashboardPage() {
                 ))}
               </div>
             ) : (
-              <div className="text-center py-10">
-                <CheckCircle className="h-12 w-12 mx-auto mb-4 text-purple-500 opacity-50" />
+              <div className="text-center py-8 sm:py-10">
+                <CheckCircle className="h-10 w-10 sm:h-12 sm:w-12 mx-auto mb-4 text-purple-500 opacity-50" />
                 <p className="text-purple-300 mb-4">You don't have any registered domains yet</p>
                 <Link href="/">
                   <CyberButton>Register Your First Domain</CyberButton>
