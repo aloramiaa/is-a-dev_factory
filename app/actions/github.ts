@@ -387,14 +387,41 @@ export async function createPullRequest(
     reportProgress("create-file", `Creating file: domains/${subdomain}.json...`, "loading")
     
     try {
-      await octokit.repos.createOrUpdateFileContents({
+      // First check if the file already exists to get its SHA
+      let fileSha = '';
+      try {
+        const { data: existingFile } = await octokit.repos.getContent({
+          owner: username,
+          repo: REPO_NAME,
+          path: `domains/${subdomain}.json`,
+          ref: branchName,
+        });
+        
+        if ('sha' in existingFile) {
+          fileSha = existingFile.sha;
+          reportProgress("create-file", "File exists, updating with new content", "loading");
+        }
+      } catch (err) {
+        // File doesn't exist, which is fine for a new domain
+        reportProgress("create-file", "File doesn't exist yet, creating new file", "loading");
+      }
+      
+      // Create or update the file with the SHA if it exists
+      const updateParams: any = {
         owner: username,
         repo: REPO_NAME,
         path: `domains/${subdomain}.json`,
         message: `Add ${subdomain}.is-a.dev`,
         content,
         branch: branchName,
-      })
+      };
+      
+      // Only include SHA if the file already exists
+      if (fileSha) {
+        updateParams.sha = fileSha;
+      }
+      
+      await octokit.repos.createOrUpdateFileContents(updateParams);
       reportProgress("create-file", "File created successfully", "complete")
     } catch (error) {
       reportProgress("create-file", "Failed to create file", "error")

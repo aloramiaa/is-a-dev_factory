@@ -250,23 +250,25 @@ export default function DashboardPage() {
                           </p>
                         </div>
                       </div>
-                      <div className="flex items-center gap-2 ml-6 sm:ml-0">
+                      <div className="flex gap-2 items-center">
+                        <span className="text-xs bg-purple-950/50 text-purple-300 px-2 py-1 rounded-full">
+                          {getRecordType(domain.record)}
+                        </span>
+
                         <TooltipProvider>
                           <Tooltip>
                             <TooltipTrigger asChild>
-                              <a
-                                href={getDomainUrl(domain.name)}
-                                target={shouldShowWarning(domain.name) ? "_self" : "_blank"}
+                              <a 
+                                href={`https://${domain.name}.is-a.dev`} 
+                                target="_blank" 
                                 rel="noopener noreferrer"
-                                className="text-blue-400 hover:underline flex items-center gap-1 text-sm"
+                                className="p-1 hover:bg-purple-900/30 rounded-full"
                               >
-                                <span className="hidden sm:inline">{domain.name}.is-a.dev</span>
-                                <span className="sm:hidden">Visit</span>
-                                <ExternalLink size={14} />
+                                <ExternalLink className="h-4 w-4 text-purple-400" />
                               </a>
                             </TooltipTrigger>
                             <TooltipContent>
-                              <p>Visit Website</p>
+                              <p>Visit website</p>
                             </TooltipContent>
                           </Tooltip>
                         </TooltipProvider>
@@ -274,17 +276,15 @@ export default function DashboardPage() {
                         <TooltipProvider>
                           <Tooltip>
                             <TooltipTrigger asChild>
-                              <a
-                                href={`https://github.com/${REPO_OWNER}/${REPO_NAME}/blob/main/domains/${domain.name}.json`}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="p-2 text-purple-300 hover:text-purple-200 hover:bg-purple-900/30 rounded-md"
+                              <Link 
+                                href={`/dashboard/edit/${domain.name}`}
+                                className="p-1 hover:bg-purple-900/30 rounded-full"
                               >
-                                <Edit size={16} />
-                              </a>
+                                <Edit className="h-4 w-4 text-purple-400" />
+                              </Link>
                             </TooltipTrigger>
                             <TooltipContent>
-                              <p>View Configuration</p>
+                              <p>Edit domain</p>
                             </TooltipContent>
                           </Tooltip>
                         </TooltipProvider>
