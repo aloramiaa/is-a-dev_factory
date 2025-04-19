@@ -25,6 +25,11 @@ const STEPS = {
   REVIEW: 5,
 }
 
+// Helper function to check if a domain record only has MX records
+const isEmailOnly = (record: DomainRecord): boolean => {
+  return Object.keys(record).length === 1 && Object.keys(record)[0] === "MX";
+}
+
 export function MultiStepForm() {
   const { data: session, status } = useSession()
   const { toast } = useToast()
@@ -232,6 +237,16 @@ export function MultiStepForm() {
       return
     }
 
+    // Check if screenshot is required (for non-email domains)
+    if (!isEmailOnly(record) && !screenshot) {
+      toast({
+        title: "Screenshot Required",
+        description: "Please upload a screenshot of your website. It's mandatory for non-mail server domains.",
+        variant: "destructive",
+      })
+      return
+    }
+
     // Show progress terminal
     setShowProgress(true)
     setIsSubmitting(true)
@@ -283,86 +298,101 @@ export function MultiStepForm() {
         status: "complete"
       })
 
-      // Add more progress steps
+      // Add fork progress step
       addProgressStep({
         id: "fork",
         message: "Forking repository...",
         status: "loading"
       })
 
-      // Simulate progress with delays
-      setTimeout(() => {
+      try {
+        // Actual PR creation using the GitHub API
+        const result = await createPullRequest(subdomain, domainData, screenshot);
+
+        // Update fork progress
         updateProgressStep({
           id: "fork",
-          message: "Forked repository",
+          message: "Repository forked successfully",
           status: "complete"
-        })
-        
-        // Upload screenshot step (if provided)
+        });
+
+        // If screenshot was uploaded
         if (screenshot) {
           addProgressStep({
             id: "screenshot",
             message: "Uploading screenshot...",
             status: "loading"
-          })
+          });
           
-          setTimeout(() => {
-            updateProgressStep({
-              id: "screenshot",
-              message: "Screenshot uploaded",
-              status: "complete"
-            })
-            createJsonFile()
-          }, 1500)
-        } else {
-          createJsonFile()
+          updateProgressStep({
+            id: "screenshot",
+            message: "Screenshot uploaded successfully",
+            status: "complete"
+          });
         }
-      }, 2000)
-      
-      // Create JSON file step
-      function createJsonFile() {
+
+        // Add file creation step
         addProgressStep({
           id: "create",
           message: "Creating domain JSON file...",
           status: "loading"
-        })
+        });
         
-        setTimeout(() => {
-          updateProgressStep({
-            id: "create",
-            message: "Domain JSON file created",
-            status: "complete"
-          })
-          createPr()
-        }, 1500)
-      }
-      
-      // Create Pull Request step
-      function createPr() {
+        updateProgressStep({
+          id: "create",
+          message: "Domain JSON file created successfully",
+          status: "complete"
+        });
+
+        // Add PR creation step
         addProgressStep({
           id: "pr",
           message: "Creating pull request...",
           status: "loading"
-        })
+        });
         
-        setTimeout(() => {
+        updateProgressStep({
+          id: "pr",
+          message: "Pull request created successfully",
+          status: "complete"
+        });
+
+        // Set the actual PR URL
+        setPullRequestUrl(result.url);
+        
+        addProgressStep({
+          id: "complete",
+          message: "Process completed successfully!",
+          status: "complete"
+        });
+        
+        setIsSubmitting(false);
+      } catch (error) {
+        console.error("Error creating pull request:", error);
+        
+        // Update the last step to error
+        const lastStep = progressSteps[progressSteps.length - 1];
+        if (lastStep) {
           updateProgressStep({
-            id: "pr",
-            message: "Pull request created",
-            status: "complete"
-          })
-          
-          // Set a fake PR URL for now
-          setPullRequestUrl(`https://github.com/is-a-dev/register/pull/new-pr-${Math.floor(Math.random() * 10000)}`)
-          
-          addProgressStep({
-            id: "complete",
-            message: "Process completed successfully!",
-            status: "complete"
-          })
-          
-          setIsSubmitting(false)
-        }, 2000)
+            id: lastStep.id,
+            message: "Error: " + (error instanceof Error ? error.message : "Unknown error"),
+            status: "error"
+          });
+        }
+        
+        addProgressStep({
+          id: "error",
+          message: "An error occurred during the process. You can try the manual method.",
+          status: "error"
+        });
+        
+        toast({
+          title: "Error",
+          description: "Failed to create pull request. You can try the manual method.",
+          variant: "destructive",
+        });
+        
+        setIsSubmitting(false);
       }
     } catch (error) {
       console.error("Error creating pull request:", error)
@@ -583,7 +613,11 @@ export function MultiStepForm() {
             className="space-y-4"
           >
             <h2 className="text-2xl font-bold text-purple-400">Step 5: Website Screenshot</h2>
-            <p className="text-purple-300">Upload a screenshot of your website (optional but recommended).</p>
+            <p className="text-purple-300">
+              {isEmailOnly(record) 
+                ? "Upload a screenshot of your website (optional for mail server domains)." 
+                : "Upload a screenshot of your website (required for all non-mail server domains)."}
+            </p>
 
             <div className="border-2 border-dashed border-purple-500 rounded-md p-6 text-center">
               {screenshot ? (
@@ -642,7 +676,20 @@ export function MultiStepForm() {
                 <ChevronLeft className="mr-1 sm:mr-2 h-4 w-4" />
                 <span className="sm:inline">Back</span>
               </CyberButton>
-              <CyberButton onClick={nextStep} className="w-1/2 sm:w-auto">
+              <CyberButton 
+                onClick={() => {
+                  if (!isEmailOnly(record) && !screenshot) {
+                    toast({
+                      title: "Screenshot Required",
+                      description: "Please upload a screenshot of your website. It's mandatory for non-mail server domains.",
+                      variant: "destructive",
+                    });
+                    return;
+                  }
+                  nextStep();
+                }} 
+                className="w-1/2 sm:w-auto"
+              >
                 <span className="sm:inline">Next</span>
                 <ChevronRight className="ml-1 sm:ml-2 h-4 w-4" />
               </CyberButton>
@@ -668,6 +715,44 @@ export function MultiStepForm() {
                 <JsonPreview json={generateJsonPreview()} />
 
                 <div className="mt-6 pt-4 border-t border-purple-800">
+                  {showProgress && (
+                    <div className="mb-6 border border-purple-500 rounded-md overflow-hidden">
+                      <div className="bg-black p-2">
+                        <div className="flex items-center gap-2 mb-2">
+                          <TerminalSquare className="h-4 w-4 text-purple-400" />
+                          <span className="text-purple-300 text-sm font-mono">
+                            Terminal Progress
+                          </span>
+                        </div>
+                        <div className="p-3 bg-gray-900 rounded-md font-mono text-xs h-60 overflow-y-auto">
+                          {progressSteps.map((step, index) => (
+                            <div key={index} className="mb-2">
+                              <span className={`mr-2 ${
+                                step.status === "loading" ? "text-yellow-400" :
+                                step.status === "complete" ? "text-green-400" :
+                                "text-red-400"
+                              }`}>
+                                {step.status === "loading" ? "⟳" : 
+                                 step.status === "complete" ? "✓" : 
+                                 "✗"}
+                              </span>
+                              <span className={`${
+                                step.status === "loading" ? "text-yellow-200" :
+                                step.status === "complete" ? "text-green-200" :
+                                "text-red-200"
+                              }`}>
+                                {step.message}
+                              </span>
+                              {step.status === "loading" && (
+                                <span className="animate-pulse">...</span>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                  
                   {!pullRequestUrl ? (
                     <CyberButton
                       onClick={handleSubmit}
