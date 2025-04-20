@@ -14,13 +14,15 @@ A modern, elegant web application for registering and managing free `.is-a.dev` 
 
 <div align="center">
   <a href="https://is-a-dev-factory.onrender.com/" target="_blank">
-    <img src="https://img.shields.io/badge/LIVE_DEMO-%E2%86%92-blueviolet?style=for-the-badge&logo=vercel&logoColor=white" alt="Live Demo" />
+    <img src="https://img.shields.io/badge/LIVE_DEMO-%E2%86%92-blueviolet?style=for-the-badge&logo=render&logoColor=white" alt="Live Demo" />
   </a>
 </div>
 
 <p align="center">
   Try it now: <a href="https://is-a-dev-factory.onrender.com/" target="_blank">https://is-a-dev-factory.onrender.com/</a>
 </p>
+
+> **Note:** This project is deployed on Render due to Vercel's serverless function 10-second timeout limitation. The GitHub API operations required for domain registration may exceed this limit.
 
 ## ✨ Features
 
@@ -157,11 +159,36 @@ GITHUB_API_TOKEN=your_github_personal_access_token
 
 ### Supported Deployment Platforms
 
-The app can be easily deployed to:
-- [Vercel](https://vercel.com) (recommended)
-- [Netlify](https://netlify.com)
+The app can be deployed to:
+- [Render](https://render.com) (recommended)
 - [Railway](https://railway.app)
-- Any platform supporting Next.js applications
+- Any platform supporting Next.js applications with sufficient serverless function timeout limits
+
+> **Important:** Vercel and similar platforms with strict serverless function timeout limits (< 10 seconds) are not recommended as the GitHub API operations may exceed these limits.
+
+### Render Deployment Considerations
+
+When deploying to Render:
+
+1. Free tier Render services become inactive after periods of inactivity
+2. To prevent this, set up a Cron Job to ping your site every 10 minutes
+3. You can use services like [Cron-Job.org](https://cron-job.org/), [UptimeRobot](https://uptimerobot.com/), or [GitHub Actions](https://github.com/features/actions)
+
+Example GitHub Actions workflow to ping your site (create `.github/workflows/ping.yml`):
+```yaml
+name: Ping Website
+
+on:
+  schedule:
+    - cron: '*/10 * * * *'  # Run every 10 minutes
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping website to prevent inactivity
+        run: curl -s https://your-render-app-url.onrender.com > /dev/null
+```
 
 ## 🧰 Technology Stack
 
