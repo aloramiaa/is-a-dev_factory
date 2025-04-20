@@ -118,9 +118,16 @@ export async function createPullRequest(
   screenshot?: File | null
 ): Promise<{ url: string }> {
   try {
-    const reportProgress = (id: string, message: string, status: ProgressStep["status"]) => {
-      // Just log to server console instead of using callbacks
+    // Function to send detailed logging info to both server and client
+    const reportProgress = (id: string, message: string, status: ProgressStep["status"], details?: any) => {
+      // Server console log
       console.log(`[${status}] ${message}`)
+      
+      // Return values for client-side
+      if (details) {
+        return { id, message, status, details }
+      }
+      return { id, message, status }
     }
 
     reportProgress("auth", "Authenticating with GitHub...", "loading")
@@ -131,7 +138,8 @@ export async function createPullRequest(
       reportProgress("auth", "Authentication failed - no token available", "error")
       throw new Error("Authentication required")
     }
-    reportProgress("auth", "Authentication successful", "complete")
+    const authResult = reportProgress("auth", "Authentication successful", "complete")
+    console.log("Auth result:", authResult)
 
     const octokit = new Octokit({
       auth: token,
@@ -141,7 +149,12 @@ export async function createPullRequest(
     reportProgress("user", "Getting GitHub user information...", "loading")
     const { data: user } = await octokit.users.getAuthenticated()
     const username = user.login
-    reportProgress("user", `Authenticated as ${username}`, "complete")
+    const userInfo = reportProgress("user", `Authenticated as ${username}`, "complete", {
+      username,
+      id: user.id,
+      url: user.html_url
+    })
+    console.log("User info:", userInfo)
 
     // Store the actual GitHub username in the domain data
     // This ensures we use the login name, not the display name
@@ -166,9 +179,11 @@ export async function createPullRequest(
             repo: screenshotRepoName
           });
           reportProgress("screenshot", "Found existing screenshot repository", "complete");
+          console.log(`Screenshot repo found: https://github.com/${username}/${screenshotRepoName}`);
         } catch (error) {
           // Repo doesn't exist, create it
           reportProgress("screenshot", "Creating screenshot repository...", "loading");
+          console.log(`Creating new repository: ${username}/${screenshotRepoName}`);
           await octokit.repos.createForAuthenticatedUser({
             name: screenshotRepoName,
             description: "Screenshots for my is-a.dev domains",
@@ -176,6 +191,7 @@ export async function createPullRequest(
             private: false
           });
           reportProgress("screenshot", "Created screenshot repository", "complete");
+          console.log(`Screenshot repo created: https://github.com/${username}/${screenshotRepoName}`);
           
           // Wait a bit for the repo to be ready
           await new Promise(resolve => setTimeout(resolve, 3000));
@@ -189,6 +205,7 @@ export async function createPullRequest(
         const timestamp = Date.now();
         const fileExtension = screenshot.name.split('.').pop() || 'png';
         const filename = `${subdomain}-${timestamp}.${fileExtension}`;
+        console.log(`Screenshot filename: ${filename} (size: ${(arrayBuffer.byteLength / 1024).toFixed(2)} KB)`);
         
         // Upload screenshot to user's screenshot repo
         reportProgress("screenshot", `Uploading screenshot as ${filename}...`, "loading");
@@ -204,9 +221,11 @@ export async function createPullRequest(
           // Get raw image URL
           screenshotUrl = `https://raw.githubusercontent.com/${username}/${screenshotRepoName}/main/${filename}`;
           reportProgress("screenshot", "Screenshot uploaded successfully", "complete");
+          console.log(`Screenshot uploaded: ${screenshotUrl}`);
         } catch (error) {
           console.error("Error uploading screenshot:", error);
           reportProgress("screenshot", "Failed to upload screenshot", "error");
+          console.log("Failed to upload screenshot. Will continue PR creation without it.");
           // Continue with PR creation even if screenshot upload fails
         }
       }
@@ -237,6 +256,7 @@ export async function createPullRequest(
     } catch (error: any) {
       console.error("Fork creation error:", error)
       reportProgress("fork", "Fork creation failed, checking if fork already exists...", "loading")
+      console.log(`Fork creation error: ${error.message}. Status: ${error.status}. Checking for existing fork...`)
       
       // Check if error indicates the fork already exists
       if (error.status === 422 && error.message?.includes("already exists")) {
@@ -255,7 +275,8 @@ export async function createPullRequest(
       
       console.log(`Found existing fork:`, {
         forkId: existingFork.id,
-        forkName: existingFork.full_name
+        forkName: existingFork.full_name,
+        url: existingFork.html_url
       })
       
       fork.data = existingFork
@@ -265,6 +286,7 @@ export async function createPullRequest(
     // Wait longer for the fork to be ready (GitHub API can take time to complete the fork)
     // Increase wait time significantly to ensure the fork is ready
     reportProgress("wait-fork", "Waiting for fork to be ready...", "loading")
+    console.log(`Waiting 15 seconds for fork to be fully ready...`)
     await new Promise((resolve) => setTimeout(resolve, 15000)) // Increased to 15 seconds
     
     if (!fork.data) {
@@ -272,6 +294,7 @@ export async function createPullRequest(
       throw new Error("Fork data is undefined")
     }
     reportProgress("wait-fork", `Fork ready: ${fork.data.full_name}`, "complete")
+    console.log(`Fork should now be ready: https://github.com/${fork.data.full_name}`)
 
     // Verify fork exists and is accessible
     reportProgress("verify-fork", "Verifying fork access...", "loading")
@@ -293,6 +316,7 @@ export async function createPullRequest(
         })
         
         reportProgress("verify-fork", `Fork verified and accessible: ${verifiedFork.full_name} (attempt ${verifyAttempts})`, "complete")
+        console.log(`Fork verified after ${verifyAttempts} attempt(s): ${verifiedFork.html_url}`)
         forkVerified = true
       } catch (error) {
         console.error(`Fork verification error (attempt ${verifyAttempts}):`, error)
@@ -302,10 +326,15 @@ export async function createPullRequest(
           console.error("Error accessing fork:", error)
           throw new Error("Cannot access fork, please try again later")
         } else {
-          reportProgress("verify-fork", `Fork not yet accessible (attempt ${verifyAttempts}), waiting longer...`, "loading")
-          // Wait before retrying with exponential backoff
-          await new Promise(resolve => setTimeout(resolve, verifyBackoffTime))
-          verifyBackoffTime *= 2 // Exponential backoff
+          // Exponential backoff with jitter
+          const jitter = Math.random() * 1000
+          const backoff = verifyBackoffTime + jitter
+          
+          console.log(`Waiting ${Math.round(backoff / 1000)} seconds before retry...`)
+          await new Promise((resolve) => setTimeout(resolve, backoff))
+          
+          // Increase backoff time for next attempt
+          verifyBackoffTime *= 1.5
         }
       }
     }
@@ -318,6 +347,7 @@ export async function createPullRequest(
     })
     const defaultBranch = repo.default_branch
     reportProgress("get-branch", `Default branch: ${defaultBranch}`, "complete")
+    console.log(`Default branch for ${REPO_OWNER}/${REPO_NAME}: ${defaultBranch}`)
 
     // 3. Get the latest commit SHA from the original repo
     reportProgress("get-commit", "Getting latest commit information...", "loading")
@@ -328,6 +358,7 @@ export async function createPullRequest(
     })
     const latestCommitSha = refData.object.sha
     reportProgress("get-commit", `Latest commit SHA: ${latestCommitSha.substring(0, 7)}...`, "complete")
+    console.log(`Latest commit SHA: ${latestCommitSha} (${refData.object.type})`)
 
     // 4. Create a new branch in the fork
     // Use only the last part of subdomain for branch name if it contains dots
@@ -338,6 +369,7 @@ export async function createPullRequest(
     const timestamp = Date.now()
     const branchName = `add-${subdomainForBranch}-${timestamp}`
     reportProgress("create-branch", `Creating branch in fork: ${branchName}...`, "loading")
+    console.log(`Creating branch '${branchName}' in fork ${username}/${REPO_NAME}`)
     
     // Try to create the branch, with retry and exponential backoff
     let branchCreated = false
@@ -351,16 +383,19 @@ export async function createPullRequest(
         // Add more descriptive logging
         console.log(`Attempt ${attempts}: Creating branch ${branchName} in ${username}/${REPO_NAME} from SHA ${latestCommitSha}`)
         
-        await octokit.git.createRef({
+        const branchResponse = await octokit.git.createRef({
           owner: username,
           repo: REPO_NAME,
           ref: `refs/heads/${branchName}`,
           sha: latestCommitSha,
         })
+        
         reportProgress("create-branch", `Branch created successfully (attempt ${attempts})`, "complete")
+        console.log(`Branch created: ${branchResponse.data.ref} (URL: ${branchResponse.data.url})`)
         branchCreated = true
       } catch (error: any) {
         console.error(`Branch creation error (attempt ${attempts}):`, error)
+        console.log(`Error details: Status ${error.status}, Message: ${error.message}`)
         
         if (attempts >= maxAttempts) {
           reportProgress("create-branch", `Failed to create branch after ${maxAttempts} attempts`, "error")
@@ -369,12 +404,14 @@ export async function createPullRequest(
           } else if (error.message && error.message.includes("Reference already exists")) {
             // If branch already exists, consider it a success
             reportProgress("create-branch", `Branch ${branchName} already exists, proceeding`, "complete")
+            console.log(`Branch already exists, continuing with PR creation...`)
             branchCreated = true
           } else {
             throw new Error(`Failed to create branch in fork: ${error.message || "Unknown error"}`)
           }
         } else {
           reportProgress("create-branch", `Failed to create branch (attempt ${attempts}), retrying...`, "loading")
+          console.log(`Retrying branch creation in ${backoffTime/1000}s...`)
           // Wait before retrying with exponential backoff
           await new Promise(resolve => setTimeout(resolve, backoffTime))
           backoffTime *= 2 // Exponential backoff
@@ -383,8 +420,11 @@ export async function createPullRequest(
     }
 
     // 5. Create the file content in the fork
-    const content = Buffer.from(JSON.stringify(domainData, null, 2)).toString("base64")
+    const domainJsonContent = JSON.stringify(domainData, null, 2);
+    const content = Buffer.from(domainJsonContent).toString("base64")
     reportProgress("create-file", `Creating file: domains/${subdomain}.json...`, "loading")
+    console.log(`Creating domain file: domains/${subdomain}.json`)
+    console.log(`File content (pre-encoded): ${domainJsonContent}`)
     
     try {
       // First check if the file already exists to get its SHA
@@ -400,10 +440,12 @@ export async function createPullRequest(
         if ('sha' in existingFile) {
           fileSha = existingFile.sha;
           reportProgress("create-file", "File exists, updating with new content", "loading");
+          console.log(`File already exists with SHA: ${fileSha}, will update it`)
         }
       } catch (err) {
         // File doesn't exist, which is fine for a new domain
         reportProgress("create-file", "File doesn't exist yet, creating new file", "loading");
+        console.log(`File doesn't exist yet, will create a new file`)
       }
       
       // Create or update the file with the SHA if it exists
@@ -421,16 +463,19 @@ export async function createPullRequest(
         updateParams.sha = fileSha;
       }
       
-      await octokit.repos.createOrUpdateFileContents(updateParams);
+      const fileResponse = await octokit.repos.createOrUpdateFileContents(updateParams);
       reportProgress("create-file", "File created successfully", "complete")
-    } catch (error) {
+      console.log(`File created successfully: ${fileResponse.data.content?.html_url || "URL not available"}`)
+    } catch (error: any) {
       reportProgress("create-file", "Failed to create file", "error")
       console.error("Error creating file:", error)
+      console.log(`Error details: Status ${error.status}, Message: ${error.message}`)
       throw new Error("Failed to create file in fork")
     }
 
     // 6. Create a pull request from fork to original repo - update to include screenshot
     reportProgress("create-pr", "Creating pull request...", "loading")
+    console.log(`Creating pull request: ${username}:${branchName} -> ${REPO_OWNER}:${defaultBranch}`)
     try {
       // Create PR body with screenshot
       const prBody = `## Domain Registration\n\nI'd like to register \`${subdomain}.is-a.dev\`.\n\n`;
@@ -454,6 +499,8 @@ export async function createPullRequest(
       
       // Combine all sections
       const fullBody = prBody + (detailsSection ? detailsSection + "\n" : "") + screenshotSection + checklistSection;
+      console.log(`PR title: Add ${subdomain}.is-a.dev`);
+      console.log(`PR body preview: ${fullBody.substring(0, 100)}...`);
       
       const { data: pullRequest } = await octokit.pulls.create({
         owner: REPO_OWNER,
@@ -464,11 +511,14 @@ export async function createPullRequest(
         body: fullBody,
       })
       reportProgress("create-pr", `Pull request created successfully: #${pullRequest.number}`, "complete")
+      console.log(`✅ Pull request created successfully!`);
+      console.log(`PR #${pullRequest.number}: ${pullRequest.html_url}`);
       return { url: pullRequest.html_url }
-    } catch (error) {
+    } catch (error: any) {
       reportProgress("create-pr", "Failed to create pull request", "error")
       console.error("Error creating pull request:", error)
-      throw new Error("Failed to create pull request")
+      console.log(`Error details: Status ${error.status}, Message: ${error.message}`)
+      throw new Error(`Failed to create pull request: ${error.message || "Unknown error"}`)
     }
   } catch (error) {
     console.error("Error creating pull request:", error)

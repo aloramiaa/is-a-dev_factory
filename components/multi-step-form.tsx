@@ -247,6 +247,13 @@ export function MultiStepForm() {
       return
     }
 
+    console.log("=== 🚀 PR CREATION PROCESS STARTED ===");
+    console.log(`Subdomain: ${subdomain}.is-a.dev`);
+    console.log(`User: ${session?.user?.name || "Unknown"} (${session?.user?.email || "No email"})`);
+    console.log(`GitHub username (from session): ${session?.user?.githubUsername || "Not available in session"}`);
+    console.log(`Screenshot provided: ${screenshot ? "Yes" : "No"}`);
+    console.log(`Email-only domain: ${isEmailOnly(record) ? "Yes" : "No"}`);
+
     // Show progress terminal
     setShowProgress(true)
     setIsSubmitting(true)
@@ -288,8 +295,12 @@ export function MultiStepForm() {
         domainData.redirect_config = redirectConfig
       }
 
+      console.log("Domain data being submitted:", domainData);
+      
       // Generate JSON for manual PR creation
-      setPullRequestJson(JSON.stringify(domainData, null, 2))
+      const jsonData = JSON.stringify(domainData, null, 2);
+      setPullRequestJson(jsonData);
+      console.log("Generated JSON for domain:", jsonData);
 
       // Update progress step
       updateProgressStep({
@@ -306,8 +317,14 @@ export function MultiStepForm() {
       })
 
       try {
+        console.log("Starting createPullRequest server action call...");
+        console.time("PR Creation Time");
+        
         // Actual PR creation using the GitHub API
         const result = await createPullRequest(subdomain, domainData, screenshot);
+        
+        console.timeEnd("PR Creation Time");
+        console.log("PR creation result:", result);
 
         // Update fork progress
         updateProgressStep({
@@ -359,6 +376,7 @@ export function MultiStepForm() {
 
         // Set the actual PR URL
         setPullRequestUrl(result.url);
+        console.log("✅ PR created successfully:", result.url);
         
         addProgressStep({
           id: "complete",
@@ -367,8 +385,14 @@ export function MultiStepForm() {
         });
         
         setIsSubmitting(false);
-      } catch (error) {
-        console.error("Error creating pull request:", error);
+      } catch (error: any) {
+        console.error("⛔ Error creating pull request:", error);
+        console.log("Error details:", {
+          message: error.message || "Unknown error",
+          stack: error.stack,
+          name: error.name,
+          cause: error.cause
+        });
         
         // Update the last step to error
         const lastStep = progressSteps[progressSteps.length - 1];
@@ -394,32 +418,40 @@ export function MultiStepForm() {
         
         setIsSubmitting(false);
       }
-    } catch (error) {
-      console.error("Error creating pull request:", error)
+    } catch (error: any) {
+      console.error("⛔ Error during form submission process:", error);
+      console.log("Error details:", {
+        message: error.message || "Unknown error",
+        stack: error.stack,
+        name: error.name,
+        cause: error.cause
+      });
       
       // Update the last step to error
-      const lastStep = progressSteps[progressSteps.length - 1]
+      const lastStep = progressSteps[progressSteps.length - 1];
       if (lastStep) {
         updateProgressStep({
           id: lastStep.id,
           message: "Error: " + (error instanceof Error ? error.message : "Unknown error"),
           status: "error"
-        })
+        });
       }
       
       addProgressStep({
         id: "error",
         message: "An error occurred during the process. You can try the manual method.",
         status: "error"
-      })
+      });
       
       toast({
         title: "Error",
         description: "Failed to create pull request. You can try the manual method.",
         variant: "destructive",
-      })
+      });
       
-      setIsSubmitting(false)
+      setIsSubmitting(false);
+    } finally {
+      console.log("=== 🏁 PR CREATION PROCESS COMPLETED ===");
     }
   }
   

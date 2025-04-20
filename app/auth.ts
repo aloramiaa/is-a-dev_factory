@@ -14,15 +14,27 @@ export const authOptions: NextAuthOptions = {
     }),
   ],
   callbacks: {
-    async jwt({ token, account, profile }) {
+    async jwt({ token, account, profile, user }) {
       // Persist the OAuth access_token to the token right after signin
       if (account) {
         token.accessToken = account.access_token
       }
       
-      // Store GitHub username (login) if available from profile
+      // Store GitHub username (login) from various possible sources
       if (profile) {
+        // First priority: profile from OAuth provider
         token.githubUsername = profile.login
+        console.log(`JWT callback: Setting GitHub username from profile: ${profile.login}`)
+      } else if (user && (user as any).login) {
+        // Second priority: user object (might have login property on certain providers)
+        token.githubUsername = (user as any).login
+        console.log(`JWT callback: Setting GitHub username from user.login: ${(user as any).login}`)
+      } else if (token.name) {
+        // Last resort fallback: try to use sanitized name
+        // This is less reliable but better than nothing
+        const sanitizedName = token.name.toString().toLowerCase().replace(/[^a-z0-9-]/g, '')
+        token.githubUsername = sanitizedName
+        console.log(`JWT callback: Setting GitHub username from sanitized name: ${sanitizedName}`)
       }
       
       return token
@@ -34,6 +46,9 @@ export const authOptions: NextAuthOptions = {
       // Add GitHub username (login) to the session
       if (token.githubUsername && session.user) {
         session.user.githubUsername = token.githubUsername as string
+        console.log(`Session callback: Added GitHub username to session: ${session.user.githubUsername}`)
+      } else {
+        console.warn(`Session callback: GitHub username missing from token`)
       }
       
       return session

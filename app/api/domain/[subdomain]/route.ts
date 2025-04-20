@@ -100,8 +100,6 @@ export async function GET(
         ownerGithub === username,
         ownerUsername === extractedUsername,
         ownerGithub === extractedUsername,
-        (username === 'aloramia' || username === 'aloramiaa') && 
-          (ownerUsername === 'aloramia' || ownerUsername === 'aloramiaa'),
       ].some(Boolean);
       
       if (!isOwner) {

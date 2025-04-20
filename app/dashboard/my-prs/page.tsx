@@ -72,12 +72,20 @@ export default function MyPullRequestsPage() {
       console.log("Access token available:", !!session?.accessToken)
       console.log("Using direct fetch:", useDirectFetch)
       
-      // Check if GitHub username is missing, prompt for re-authentication
+      // If neither server API mode nor direct fetch mode has a username, 
+      // we need to handle this situation more gracefully
       if (!githubUsername && !useDirectFetch) {
-        console.error("GitHub username missing from session");
-        setShowReauthPrompt(true);
-        setIsLoading(false);
-        return;
+        console.warn("GitHub username missing from session");
+        
+        // Attempt to resolve username automatically
+        const resolved = await tryResolveGitHubUsername();
+        
+        if (!resolved) {
+          // Only show re-auth prompt if resolution failed
+          setShowReauthPrompt(true);
+          setIsLoading(false);
+          return;
+        }
       }
       
       let data;
@@ -87,8 +95,44 @@ export default function MyPullRequestsPage() {
         console.log("Using direct GitHub API access")
         
         try {
+          // First fetch the authenticated user to get their login name
+          let userLogin = githubUsername;
+          
+          if (!userLogin) {
+            try {
+              const userProfileResponse = await fetch("https://api.github.com/user", {
+                headers: {
+                  Authorization: `token ${session.accessToken}`,
+                  Accept: "application/vnd.github.v3+json",
+                },
+              });
+              
+              if (userProfileResponse.ok) {
+                const userData = await userProfileResponse.json();
+                userLogin = userData.login;
+                console.log(`Resolved GitHub username from API: ${userLogin}`);
+              } else {
+                console.error("Failed to fetch GitHub user profile");
+              }
+            } catch (profileError) {
+              console.error("Error fetching GitHub profile:", profileError);
+            }
+          }
+          
+          // If we still don't have a login, use display name as fallback
+          if (!userLogin && displayName) {
+            userLogin = displayName.toLowerCase().replace(/[^a-z0-9-]/g, '');
+            console.log(`Using normalized display name as fallback: ${userLogin}`);
+          }
+          
+          if (!userLogin) {
+            throw new Error("Could not determine GitHub username for filtering PRs");
+          }
+          
           // Try the PR endpoint directly
-          const directApiUrl = `https://api.github.com/repos/is-a-dev/register/pulls?state=all&per_page=100`;
+          const repoOwner = process.env.NEXT_PUBLIC_GITHUB_REPO_OWNER || "is-a-dev";
+          const repoName = process.env.NEXT_PUBLIC_GITHUB_REPO_NAME || "register";
+          const directApiUrl = `https://api.github.com/repos/${repoOwner}/${repoName}/pulls?state=all&per_page=100`;
           console.log("Fetching from:", directApiUrl);
           
           const directResponse = await fetch(directApiUrl, {
@@ -105,9 +149,6 @@ export default function MyPullRequestsPage() {
           const allPrs = await directResponse.json();
           console.log(`Fetched ${allPrs.length} total PRs from repository`);
           
-          // For direct fetch without a GitHub username, hardcode to "aloramiaa"
-          const userLogin = githubUsername || "aloramiaa";
-          
           // Log sample of PR authors
           console.log("Sample of PR authors:");
           allPrs.slice(0, 5).forEach((pr: any) => {
@@ -120,6 +161,10 @@ export default function MyPullRequestsPage() {
           );
           
           console.log(`Found ${userPrs.length} PRs for user after filtering by GitHub username: ${userLogin}`);
+          
+          // Sort PRs by creation date (newest first)
+          userPrs.sort((a: any, b: any) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+          
           data = userPrs;
         } catch (directError: any) {
           console.error("Error in direct API call:", directError);
@@ -252,6 +297,39 @@ export default function MyPullRequestsPage() {
       router.push("/login")
     }
   }, [status, router])
+
+  // New helper function to try to resolve GitHub username programmatically
+  const tryResolveGitHubUsername = async (): Promise<boolean> => {
+    if (!session?.accessToken) {
+      console.error("No access token available to resolve GitHub username");
+      return false;
+    }
+    
+    try {
+      console.log("Attempting to resolve GitHub username from GitHub API");
+      const userResponse = await fetch("https://api.github.com/user", {
+        headers: {
+          Authorization: `token ${session.accessToken}`,
+          Accept: "application/vnd.github.v3+json",
+        },
+      });
+      
+      if (userResponse.ok) {
+        const userData = await userResponse.json();
+        console.log(`Successfully resolved GitHub username: ${userData.login}`);
+        
+        // Switch to direct fetch mode since we have the data but not in the session
+        setUseDirectFetch(true);
+        return true;
+      } else {
+        console.error("Failed to resolve GitHub username", userResponse.status);
+        return false;
+      }
+    } catch (error) {
+      console.error("Error resolving GitHub username:", error);
+      return false;
+    }
+  };
 
   if (status === "loading" || isLoading) {
     return (

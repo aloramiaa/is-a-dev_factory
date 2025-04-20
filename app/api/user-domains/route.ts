@@ -112,10 +112,6 @@ export async function GET() {
           ownerUsername === extractedUsername,
           ownerGithub === extractedUsername,
           
-          // Special case for Alora Mia -> aloramiaa
-          (username === 'aloramia' || username === 'aloramiaa') && 
-            (ownerUsername === 'aloramia' || ownerUsername === 'aloramiaa'),
-          
           // For debugging: partial matches
           username.length > 3 && ownerUsername.includes(username),
           username.length > 3 && ownerGithub.includes(username),
