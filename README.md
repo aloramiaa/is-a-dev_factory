@@ -80,6 +80,11 @@ A modern, elegant web application for registering and managing free `.is-a.dev` 
    - Set the Authorization callback URL to `http://localhost:3000/api/auth/callback/github`
    - Copy the Client ID and Client Secret
 
+   > **GitHub OAuth Scopes**: This application requests the minimum permissions required:
+   > - `read:user`: Required to access your GitHub username for domain registration and attribution
+   > - `user:email`: Needed to include your email in domain registration (required by is-a.dev)
+   > - `public_repo`: Allows creating forks, branches, and pull requests to the public is-a.dev repository
+
 4. **Configure environment variables**
    - Copy `.env.local.example` to `.env.local` (or create a new `.env.local` file)
    - Fill in the required values:
@@ -221,6 +226,7 @@ This repository includes files to facilitate deployment:
 - **Authentication**
   - [NextAuth.js](https://next-auth.js.org/) - Authentication for Next.js
   - [GitHub OAuth](https://docs.github.com/en/developers/apps/building-oauth-apps) - OAuth provider
+    - Uses minimum required scopes (`read:user`, `user:email`, `public_repo`) for security
 
 - **API Integration**
   - [Octokit](https://github.com/octokit/rest.js) - GitHub API client

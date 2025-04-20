@@ -57,15 +57,18 @@ export const authOptions: NextAuthOptions = {
   pages: {
     signIn: "/login",
   },
-  useSecureCookies: process.env.NODE_ENV === "production",
+  // Always use secure cookies regardless of environment for better security
+  useSecureCookies: true,
   cookies: {
     sessionToken: {
-      name: `${process.env.NODE_ENV === "production" ? "__Secure-" : ""}next-auth.session-token`,
+      name: `__Secure-next-auth.session-token`,
       options: {
         httpOnly: true,
-        sameSite: "lax",
+        // Use strict SameSite policy for better CSRF protection
+        sameSite: "strict",
         path: "/",
-        secure: process.env.NODE_ENV === "production",
+        // Always enforce secure regardless of environment
+        secure: true,
       },
     },
   },
