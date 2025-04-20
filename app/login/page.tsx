@@ -82,7 +82,7 @@ function LoginContent() {
               <ul className="list-disc pl-5 text-xs text-purple-200 mt-1">
                 <li><strong>read:user</strong> - To get your GitHub username</li>
                 <li><strong>user:email</strong> - To include your email in domain registration</li>
-                <li><strong>repo, public_repo</strong> - To create forks, branches, and pull requests</li>
+                <li><strong>public_repo</strong> - To create forks, branches, and pull requests on public repositories</li>
               </ul>
             </div>
 
