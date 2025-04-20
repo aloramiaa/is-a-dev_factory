@@ -144,7 +144,7 @@ export default function DashboardPage() {
       <BackgroundGrid />
       <NavBar />
 
-      <div className="container mx-auto px-4 pt-20 pb-12 md:py-24 relative z-10">
+      <div className="container mx-auto px-2 sm:px-4 pt-20 pb-12 md:py-24 relative z-10">
         <header className="text-center mb-8 md:mb-12">
           <motion.div
             initial={{ opacity: 0, y: -20 }}
@@ -171,17 +171,18 @@ export default function DashboardPage() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 0.6, duration: 0.8 }}
-              className="text-xs sm:text-sm text-purple-400 mt-4 max-w-xl mx-auto"
+              className="text-xs sm:text-sm text-purple-400 mt-4 max-w-xl mx-auto p-2"
             >
               <p className="mb-2">Username information used for matching:</p>
-              <div className="bg-black/60 backdrop-blur-sm border border-purple-900 rounded-md p-2 text-center sm:text-left font-mono">
-                <p><span className="text-purple-500">Raw:</span> {usernameDebug.rawUsername}</p>
-                <p><span className="text-purple-500">Normalized:</span> {usernameDebug.username}</p>
-                <p><span className="text-purple-500">GitHub:</span> {usernameDebug.gitHubUsername}</p>
+              <div className="bg-black/60 backdrop-blur-sm border border-purple-900 rounded-md p-2 text-center">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-1 sm:gap-3 mb-1">
+                  <p><span className="text-purple-500">Raw:</span> {usernameDebug.rawUsername}</p>
+                  <p><span className="text-purple-500">Normalized:</span> {usernameDebug.username}</p>
+                  <p><span className="text-purple-500">GitHub:</span> {usernameDebug.gitHubUsername}</p>
+                </div>
               </div>
-              <p className="mt-2 text-xs text-center sm:text-left">
-                If these don't match your GitHub username, 
-                your domains might not be found. Your GitHub username should be <span className="text-purple-300">{usernameDebug.username.toLowerCase()}b</span>.
+              <p className="mt-2 text-xs text-center">
+                If these don't match your GitHub username, your domains might not be found. Your GitHub username should be <span className="text-purple-300 font-mono">{usernameDebug.username.toLowerCase()}</span>.
               </p>
             </motion.div>
           ) : session?.user?.name && (
@@ -213,8 +214,8 @@ export default function DashboardPage() {
           )}
 
           <div className="bg-black/60 backdrop-blur-sm border border-purple-500 rounded-md p-4 sm:p-6">
-            <div className="flex flex-col sm:flex-row justify-between items-center mb-6 sm:mb-8 gap-4">
-              <div className="text-center sm:text-left">
+            <div className="flex flex-col sm:flex-row justify-between items-center mb-4 sm:mb-8 gap-3">
+              <div className="text-center sm:text-left mb-2 sm:mb-0">
                 <h2 className="text-xl sm:text-2xl font-bold text-purple-400">Your Registered Domains</h2>
                 {userDomains.length > 0 && (
                   <p className="text-sm text-purple-300 mt-1">
@@ -222,16 +223,20 @@ export default function DashboardPage() {
                   </p>
                 )}
               </div>
-              <div className="flex gap-3 w-full sm:w-auto">
+              <div className="flex gap-2 w-full sm:w-auto justify-center">
                 <CyberButton onClick={fetchUserDomains} variant="outline" title="Refresh domains" className="flex-1 sm:flex-initial">
-                  <RefreshCw size={16} className="mr-2 sm:mr-0" />
-                  <span className="sm:hidden">Refresh</span>
+                  <RefreshCw size={16} className="mx-auto sm:mr-0" />
+                  <span className="sr-only sm:not-sr-only sm:ml-2">Refresh</span>
                 </CyberButton>
                 <Link href="/dashboard/my-prs" className="flex-1 sm:flex-initial">
-                  <CyberButton variant="outline" className="w-full">My PRs</CyberButton>
+                  <CyberButton variant="outline" className="w-full">
+                    <span className="hidden sm:inline">My </span>PRs
+                  </CyberButton>
                 </Link>
                 <Link href="/" className="flex-1 sm:flex-initial">
-                  <CyberButton className="w-full">Register New Domain</CyberButton>
+                  <CyberButton className="w-full">
+                    <span className="hidden sm:inline">Register </span>New<span className="hidden sm:inline"> Domain</span>
+                  </CyberButton>
                 </Link>
               </div>
             </div>
@@ -243,75 +248,62 @@ export default function DashboardPage() {
                     key={domain.name}
                     className="p-3 sm:p-4 border border-purple-800 rounded-md bg-black/40 hover:bg-black/60 transition-all"
                   >
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3">
-                      <div className="flex items-center gap-3">
-                        <Globe className="text-purple-400 flex-shrink-0" />
-                        <div className="overflow-hidden">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-2">
+                      <div className="flex items-center gap-2">
+                        <div className="bg-purple-900/30 p-1.5 rounded-full flex-shrink-0">
+                          <Globe className="text-purple-400 flex-shrink-0 h-4 w-4" />
+                        </div>
+                        <div className="overflow-hidden min-w-0 flex-1">
                           <h3 className="font-bold text-base sm:text-lg text-white truncate">{domain.name}.is-a.dev</h3>
                           <p className="text-xs sm:text-sm text-purple-300 truncate">
-                            {truncateString(domain.description || domain.domain, 40)}
+                            {truncateString(domain.description || getDomainTarget(domain.record) || "", 40)}
                           </p>
                         </div>
                       </div>
-                      <div className="flex gap-2 items-center">
-                        <span className="text-xs bg-purple-950/50 text-purple-300 px-2 py-1 rounded-full">
-                          {getRecordType(domain.record)}
-                        </span>
+                      <div className="flex items-center mt-1 sm:mt-0 justify-between">
+                        <div className="flex">
+                          <span className="text-xs bg-purple-950/50 text-purple-300 px-2 py-0.5 rounded-full whitespace-nowrap mr-2">
+                            {getRecordType(domain.record)}
+                          </span>
+                        </div>
 
-                        <TooltipProvider>
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <a 
-                                href={`https://${domain.name}.is-a.dev`} 
-                                target="_blank" 
-                                rel="noopener noreferrer"
-                                className="p-1 hover:bg-purple-900/30 rounded-full"
-                              >
-                                <ExternalLink className="h-4 w-4 text-purple-400" />
-                              </a>
-                            </TooltipTrigger>
-                            <TooltipContent>
-                              <p>Visit website</p>
-                            </TooltipContent>
-                          </Tooltip>
-                        </TooltipProvider>
-
-                        <TooltipProvider>
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <Link 
-                                href={`/dashboard/edit/${domain.name}`}
-                                className="p-1 hover:bg-purple-900/30 rounded-full"
-                              >
-                                <Edit className="h-4 w-4 text-purple-400" />
-                              </Link>
-                            </TooltipTrigger>
-                            <TooltipContent>
-                              <p>Edit domain</p>
-                            </TooltipContent>
-                          </Tooltip>
-                        </TooltipProvider>
+                        <div className="flex gap-2 ml-auto">
+                          <a 
+                            href={`https://${domain.name}.is-a.dev`} 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            className="p-2 hover:bg-purple-900/30 rounded-md flex items-center"
+                            aria-label="Visit website"
+                          >
+                            <ExternalLink className="h-4 w-4 text-purple-400" />
+                          </a>
+                          
+                          <Link 
+                            href={`/dashboard/edit/${domain.name}`}
+                            className="p-2 hover:bg-purple-900/30 rounded-md flex items-center"
+                            aria-label="Edit domain"
+                          >
+                            <Edit className="h-4 w-4 text-purple-400" />
+                          </Link>
+                        </div>
                       </div>
                     </div>
 
-                    <div className="mt-2 text-xs border-t border-purple-900/50 pt-2">
-                      <div className="flex flex-wrap gap-2">
-                        <span className="bg-purple-900/30 px-2 py-1 rounded-md text-purple-200">
-                          Type: {getRecordType(domain.record)}
-                        </span>
-                        {domain.data.repo && (
+                    {domain.data.repo && (
+                      <div className="mt-2 text-xs border-t border-purple-900/50 pt-2">
+                        <div className="flex flex-wrap gap-2">
                           <a 
                             href={domain.data.repo}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="bg-purple-900/30 px-2 py-1 rounded-md text-purple-200 flex items-center gap-1"
+                            className="bg-purple-900/30 px-2 py-1 rounded-md text-purple-200 flex items-center gap-1 text-xs"
                           >
                             <Code size={12} />
                             Repository
                           </a>
-                        )}
+                        </div>
                       </div>
-                    </div>
+                    )}
                   </div>
                 ))}
               </div>

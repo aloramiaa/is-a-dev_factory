@@ -19,7 +19,7 @@ A modern, elegant web application for registering and managing free `.is-a.dev` 
 </div>
 
 <p align="center">
-  Try it now: <a href="https://is-a-dev-factory.vercel.app/" target="_blank">https://is-a-dev-factory.vercel.app/</a>
+  Try it now: <a href="https://is-a-dev-factory.onrender.com/" target="_blank">https://is-a-dev-factory.onrender.com/</a>
 </p>
 
 ## ✨ Features

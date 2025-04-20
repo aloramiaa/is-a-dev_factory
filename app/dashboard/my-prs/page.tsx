@@ -13,7 +13,15 @@ import {
   XCircle, 
   CalendarClock, 
   ExternalLink,
-  ChevronLeft
+  ChevronLeft,
+  CircleSlash,
+  CircleDot,
+  Github,
+  Calendar,
+  X,
+  GitMerge,
+  User,
+  Hash
 } from "lucide-react"
 import { BackgroundGrid } from "@/components/background-grid"
 import { NeonGlow } from "@/components/neon-glow"
@@ -23,6 +31,7 @@ import { CyberButton } from "@/components/cyber-button"
 import { useToast } from "@/hooks/use-toast"
 import { Badge } from "@/components/ui/badge"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
+import { Spinner } from "@/components/ui/spinner"
 
 interface PullRequest {
   id: number
@@ -132,7 +141,7 @@ export default function MyPullRequestsPage() {
           // Try the PR endpoint directly
           const repoOwner = process.env.NEXT_PUBLIC_GITHUB_REPO_OWNER || "is-a-dev";
           const repoName = process.env.NEXT_PUBLIC_GITHUB_REPO_NAME || "register";
-          const directApiUrl = `https://api.github.com/repos/${repoOwner}/${repoName}/pulls?state=all&per_page=100`;
+          const directApiUrl = `https://api.github.com/repos/${repoOwner}/${repoName}/pulls?state=all`;
           console.log("Fetching from:", directApiUrl);
           
           const directResponse = await fetch(directApiUrl, {
@@ -349,7 +358,7 @@ export default function MyPullRequestsPage() {
       <BackgroundGrid />
       <NavBar />
 
-      <div className="container mx-auto px-4 pt-20 pb-12 md:py-24 relative z-10">
+      <div className="container mx-auto px-2 sm:px-4 pt-20 pb-12 md:py-24 relative z-10">
         <header className="text-center mb-8 md:mb-12">
           <motion.div
             initial={{ opacity: 0, y: -20 }}
@@ -423,177 +432,186 @@ export default function MyPullRequestsPage() {
                   </p>
                 )}
               </div>
-              <div className="flex gap-3 w-full sm:w-auto">
-                <CyberButton onClick={fetchPullRequests} variant="outline" title="Refresh PRs" className="flex-1 sm:flex-initial">
-                  <RefreshCw size={16} className="mr-2 sm:mr-0" />
-                  <span className="sm:hidden">Refresh</span>
+              <div className="grid grid-cols-2 gap-2 w-full sm:flex sm:gap-3 sm:w-auto">
+                <CyberButton onClick={fetchPullRequests} variant="outline" title="Refresh PRs" className="flex justify-center items-center sm:flex-initial">
+                  <RefreshCw size={16} className="sm:mr-2" />
+                  <span className="sr-only sm:not-sr-only">Refresh</span>
                 </CyberButton>
+                
+                <Link href="/dashboard" className="sm:flex-initial">
+                  <CyberButton variant="outline" className="w-full sm:w-auto flex justify-center items-center">
+                    <span className="hidden sm:inline">Back to </span>
+                    <span>Dashboard</span>
+                  </CyberButton>
+                </Link>
+                
                 <CyberButton 
-                  onClick={() => {
-                    setUseDirectFetch(!useDirectFetch);
-                    fetchPullRequests();
-                  }} 
+                  onClick={() => setUseDirectFetch(!useDirectFetch)} 
                   variant="outline" 
                   title={useDirectFetch ? "Use API" : "Direct Fetch"} 
-                  className="flex-1 sm:flex-initial"
+                  className="text-xs sm:text-sm sm:flex-initial"
                 >
-                  {useDirectFetch ? "Use API" : "Direct Fetch"}
+                  Direct<span className="hidden sm:inline"> Fetch</span>
                 </CyberButton>
+                
                 <CyberButton
                   onClick={() => setShowDebug(!showDebug)}
                   variant="outline"
                   title="Toggle Debug"
-                  className="flex-1 sm:flex-initial"
+                  className="text-xs sm:text-sm sm:flex-initial"
                 >
-                  Debug {showDebug ? "Off" : "On"}
+                  Debug <span className="hidden sm:inline">{showDebug ? "Off" : "On"}</span>
                 </CyberButton>
-                <Link href="/dashboard" className="flex-1 sm:flex-initial">
-                  <CyberButton variant="outline" className="w-full">
-                    <ChevronLeft size={16} className="mr-2" />
-                    Back to Dashboard
-                  </CyberButton>
-                </Link>
               </div>
             </div>
 
             {/* Debug info */}
             {showDebug && (
-              <div className="bg-black/80 border border-yellow-500 p-4 mb-6 rounded overflow-auto max-h-64 text-xs">
-                <h3 className="text-yellow-400 mb-2">Debug Information</h3>
-                <p className="text-yellow-300">Display Name: {session?.user?.name}</p>
-                <p className="text-yellow-300">GitHub Username: {session?.user?.githubUsername || "Not available (using fallback)"}</p>
-                <p className="text-yellow-300">Has Access Token: {session?.accessToken ? "Yes" : "No"}</p>
-                <p className="text-yellow-300">Using Direct Fetch: {useDirectFetch ? "Yes" : "No"}</p>
+              <div className="mb-6 p-3 border border-yellow-500 bg-yellow-500/20 rounded-md text-xs">
+                <h3 className="font-bold mb-1 text-yellow-300">Debug Info:</h3>
+                <pre className="overflow-x-auto text-yellow-200 p-2 bg-black/50 rounded">
+                  {JSON.stringify(
+                    {
+                      displayName: session?.user?.name || 'Not set',
+                      githubUsername: session?.user?.githubUsername || 'Not available',
+                      hasAccessToken: !!session?.accessToken,
+                      useDirectFetch,
+                    },
+                    null,
+                    2
+                  )}
+                </pre>
               </div>
             )}
 
-            {pullRequests.length > 0 && (
-              <div className="flex flex-wrap gap-2 mb-4 justify-center sm:justify-start">
-                <button 
-                  onClick={() => setFilterType('all')} 
-                  className={`px-3 py-1 rounded-full text-xs font-medium transition-colors ${
-                    filterType === 'all' 
-                      ? 'bg-purple-700 text-white' 
-                      : 'bg-purple-900/30 text-purple-300 hover:bg-purple-900/50'
-                  }`}
-                >
-                  All ({pullRequests.length})
-                </button>
-                <button 
-                  onClick={() => setFilterType('open')} 
-                  className={`px-3 py-1 rounded-full text-xs font-medium transition-colors ${
-                    filterType === 'open' 
-                      ? 'bg-green-700 text-white' 
-                      : 'bg-green-900/30 text-green-300 hover:bg-green-900/50'
-                  }`}
-                >
-                  Open ({pullRequests.filter(pr => pr.state === 'open').length})
-                </button>
-                <button 
-                  onClick={() => setFilterType('closed')} 
-                  className={`px-3 py-1 rounded-full text-xs font-medium transition-colors ${
-                    filterType === 'closed' 
-                      ? 'bg-red-700 text-white' 
-                      : 'bg-red-900/30 text-red-300 hover:bg-red-900/50'
-                  }`}
-                >
-                  Closed ({pullRequests.filter(pr => pr.state === 'closed' && !pr.merged_at).length})
-                </button>
-                <button 
-                  onClick={() => setFilterType('merged')} 
-                  className={`px-3 py-1 rounded-full text-xs font-medium transition-colors ${
-                    filterType === 'merged' 
-                      ? 'bg-purple-700 text-white' 
-                      : 'bg-purple-900/30 text-purple-300 hover:bg-purple-900/50'
-                  }`}
-                >
-                  Merged ({pullRequests.filter(pr => pr.merged_at !== null).length})
-                </button>
-              </div>
-            )}
+            <div className="grid grid-cols-2 sm:flex gap-2 sm:gap-3 mb-6">
+              <CyberButton
+                variant={filterType === 'all' ? 'default' : 'outline'}
+                onClick={() => setFilterType('all')}
+                className={`text-sm sm:text-base ${filterType === 'all' ? 'bg-purple-700' : ''}`}
+              >
+                All
+                <span className="ml-1 inline-flex items-center justify-center bg-purple-900 text-purple-100 text-xs rounded-full h-5 w-5 sm:ml-2">
+                  {pullRequests.length}
+                </span>
+              </CyberButton>
+              <CyberButton
+                variant={filterType === 'open' ? 'default' : 'outline'}
+                onClick={() => setFilterType('open')}
+                className={`text-sm sm:text-base ${filterType === 'open' ? 'bg-green-700' : ''}`}
+              >
+                Open
+                <span className="ml-1 inline-flex items-center justify-center bg-green-900 text-green-100 text-xs rounded-full h-5 w-5 sm:ml-2">
+                  {pullRequests.filter(pr => pr.state === 'open').length}
+                </span>
+              </CyberButton>
+              <CyberButton
+                variant={filterType === 'merged' ? 'default' : 'outline'}
+                onClick={() => setFilterType('merged')}
+                className={`text-sm sm:text-base ${filterType === 'merged' ? 'bg-purple-800' : ''}`}
+              >
+                Merged
+                <span className="ml-1 inline-flex items-center justify-center bg-purple-900 text-purple-100 text-xs rounded-full h-5 w-5 sm:ml-2">
+                  {pullRequests.filter(pr => pr.state === 'merged').length}
+                </span>
+              </CyberButton>
+              <CyberButton
+                variant={filterType === 'closed' ? 'default' : 'outline'}
+                onClick={() => setFilterType('closed')}
+                className={`text-sm sm:text-base ${filterType === 'closed' ? 'bg-red-700' : ''}`}
+              >
+                Closed
+                <span className="ml-1 inline-flex items-center justify-center bg-red-900 text-red-100 text-xs rounded-full h-5 w-5 sm:ml-2">
+                  {pullRequests.filter(pr => pr.state === 'closed').length}
+                </span>
+              </CyberButton>
+            </div>
 
-            {pullRequests.length > 0 ? (
+            {isLoading ? (
+              <div className="text-center py-10">
+                <Spinner size="lg" className="mx-auto" />
+                <p className="mt-4 text-purple-300">Loading pull requests...</p>
+              </div>
+            ) : pullRequests.length === 0 ? (
+              <div className="text-center py-10 bg-purple-950/20 border border-purple-500/50 rounded-md">
+                <CircleSlash size={48} className="mx-auto mb-4 text-purple-400 opacity-50" />
+                <h3 className="text-xl font-bold text-purple-300 mb-2">No Pull Requests Found</h3>
+                <p className="text-purple-400 mb-6 max-w-md mx-auto">
+                  You haven&apos;t created any is-a.dev domain registration requests yet.
+                </p>
+                <Link href="/dashboard">
+                  <CyberButton>Get Your Domain</CyberButton>
+                </Link>
+              </div>
+            ) : (
               <div className="space-y-4">
                 {filteredPullRequests.map((pr) => (
                   <div
                     key={pr.id}
-                    className={`p-3 sm:p-4 border ${
-                      pr.merged_at 
-                        ? 'border-purple-800 bg-purple-900/10' 
-                        : pr.state === 'closed' 
-                          ? 'border-red-800 bg-red-900/10' 
-                          : 'border-green-800 bg-green-900/10'
-                    } rounded-md hover:bg-black/60 transition-all`}
+                    className="border border-purple-500 rounded-md overflow-hidden hover:border-purple-400 transition-colors"
                   >
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3">
-                      <div className="flex items-start gap-3">
-                        {getPrStatusIcon(pr)}
-                        <div className="overflow-hidden">
-                          <h3 className="font-bold text-base sm:text-lg text-white">
-                            <a 
-                              href={pr.html_url} 
-                              target="_blank" 
-                              rel="noopener noreferrer"
-                              className="hover:text-purple-300 transition flex items-center gap-2"
-                            >
-                              {pr.title}
-                              <ExternalLink className="h-4 w-4 inline-block opacity-70" />
-                            </a>
+                    <div className="p-4 sm:p-5 bg-gradient-to-r from-black/50 to-purple-900/20">
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-3">
+                        <div className="flex items-center">
+                          {pr.state === 'open' && <CircleDot size={16} className="text-green-400 mr-2" />}
+                          {pr.state === 'merged' && <GitMerge size={16} className="text-purple-400 mr-2" />}
+                          {pr.state === 'closed' && <X size={16} className="text-red-400 mr-2" />}
+                          <h3 className="font-semibold text-lg text-purple-200 truncate">
+                            {pr.title || 'Pull Request #' + pr.number}
                           </h3>
-                          <p className="text-xs sm:text-sm text-purple-300">
-                            PR #{pr.number} - Created {formatDate(pr.created_at)}
-                          </p>
+                        </div>
+                        
+                        <div className="flex gap-2 w-full sm:w-auto justify-end">
+                          <a
+                            href={pr.html_url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex-1 sm:flex-initial"
+                          >
+                            <CyberButton variant="outline" className="w-full">
+                              <Github size={16} className="mr-2" />
+                              View on GitHub
+                            </CyberButton>
+                          </a>
                         </div>
                       </div>
-                      <div className="flex flex-wrap gap-2 items-center">
-                        {getPrStatusBadge(pr)}
+                      
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
+                        <div className="space-y-1">
+                          <div className="flex items-center text-purple-300">
+                            <Calendar size={14} className="mr-2 text-purple-400" />
+                            Created: {formatDate(pr.created_at)}
+                          </div>
+                          {pr.merged_at && (
+                            <div className="flex items-center text-purple-300">
+                              <GitMerge size={14} className="mr-2 text-purple-400" />
+                              Merged: {formatDate(pr.merged_at)}
+                            </div>
+                          )}
+                          {pr.closed_at && !pr.merged_at && (
+                            <div className="flex items-center text-purple-300">
+                              <X size={14} className="mr-2 text-red-400" />
+                              Closed: {formatDate(pr.closed_at)}
+                            </div>
+                          )}
+                        </div>
                         
-                        <CyberButton variant="outline" size="sm" asChild className="ml-2 h-8">
-                          <a 
-                            href={pr.html_url} 
-                            target="_blank" 
-                            rel="noopener noreferrer"
-                            className="flex items-center gap-1"
-                          >
-                            <ExternalLink className="h-3 w-3 text-purple-400" />
-                            <span>View on GitHub</span>
-                          </a>
-                        </CyberButton>
-                      </div>
-                    </div>
-
-                    <div className="mt-2 text-xs border-t border-purple-900/50 pt-2">
-                      <div className="flex flex-wrap gap-3">
-                        <span className="flex items-center gap-1 text-purple-200">
-                          <CalendarClock className="h-3 w-3 text-purple-400" />
-                          Updated: {formatDate(pr.updated_at)}
-                        </span>
-                        
-                        {pr.closed_at && (
-                          <span className="flex items-center gap-1 text-purple-200">
-                            <XCircle className="h-3 w-3 text-red-400" />
-                            Closed: {formatDate(pr.closed_at)}
-                          </span>
-                        )}
-                        
-                        {pr.merged_at && (
-                          <span className="flex items-center gap-1 text-purple-200">
-                            <CheckCircle className="h-3 w-3 text-purple-400" />
-                            Merged: {formatDate(pr.merged_at)}
-                          </span>
-                        )}
+                        <div className="space-y-1">
+                          <div className="flex items-center text-purple-300">
+                            <Hash size={14} className="mr-2 text-purple-400" />
+                            Number: #{pr.number}
+                          </div>
+                          {pr.user?.login && (
+                            <div className="flex items-center text-purple-300">
+                              <User size={14} className="mr-2 text-purple-400" />
+                              Created by: {pr.user.login}
+                            </div>
+                          )}
+                        </div>
                       </div>
                     </div>
                   </div>
                 ))}
-              </div>
-            ) : (
-              <div className="text-center py-8 sm:py-10">
-                <GitPullRequest className="h-10 w-10 sm:h-12 sm:w-12 mx-auto mb-4 text-purple-500 opacity-50" />
-                <p className="text-purple-300 mb-4">You haven't created any pull requests yet</p>
-                <Link href="/">
-                  <CyberButton>Register Your First Domain</CyberButton>
-                </Link>
               </div>
             )}
           </div>

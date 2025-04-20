@@ -87,7 +87,7 @@ export async function GET() {
     // Fetch all PRs from the repository using REST API
     const repoOwner = process.env.GITHUB_REPO_OWNER || "is-a-dev";
     const repoName = process.env.GITHUB_REPO_NAME || "register";
-    const apiUrl = `https://api.github.com/repos/${repoOwner}/${repoName}/pulls?state=all&per_page=100`;
+    const apiUrl = `https://api.github.com/repos/${repoOwner}/${repoName}/pulls?state=all`;
     console.log(`[API] user-prs: Fetching all PRs from repository: ${apiUrl}`);
     
     try {
