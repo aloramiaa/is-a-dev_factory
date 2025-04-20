@@ -144,12 +144,14 @@ GITHUB_API_TOKEN=your_github_personal_access_token
 
 ### Deployment Steps
 
-#### Option 1: Vercel (Recommended)
+#### Option 1: Render (Recommended)
 
 1. Fork the repository to your GitHub account
-2. Create a new project in Vercel and link it to your forked repository
-3. Configure the environment variables in the Vercel dashboard
+2. Create a new project in Render and link it to your forked repository
+3. Configure the environment variables in the Render dashboard
 4. Deploy the project
+
+> **Important:** Vercel does not support this project due to its 10-second serverless function timeout limitation. The GitHub API operations required for domain registration often exceed this limit. We recommend using Render or another platform with longer serverless function timeouts.
 
 #### Option 2: Manual Deployment
 
@@ -172,7 +174,7 @@ GITHUB_API_TOKEN=your_github_personal_access_token
 The app can be deployed to:
 - [Render](https://render.com) (recommended)
 - [Railway](https://railway.app)
-- Any platform supporting Next.js applications with sufficient serverless function timeout limits
+- Any platform supporting Next.js applications with sufficient serverless function timeout limits (>10 seconds)
 
 > **Important:** Vercel and similar platforms with strict serverless function timeout limits (< 10 seconds) are not recommended as the GitHub API operations may exceed these limits.
 
