@@ -109,6 +109,16 @@ A modern, elegant web application for registering and managing free `.is-a.dev` 
 
 ## 🌐 Production Deployment
 
+### One-Click Deployment
+
+<div align="center">
+  <a href="https://render.com/deploy?repo=https://github.com/aloramiaa/is-a-dev_factory" target="_blank">
+    <img src="https://render.com/images/deploy-to-render-button.svg" alt="Deploy to Render" />
+  </a>
+</div>
+
+> This will automatically configure the necessary environment variables, except for GitHub OAuth credentials which you'll need to add manually.
+
 ### Environment Configuration
 
 Configure production environment variables in your hosting platform:
@@ -189,6 +199,13 @@ jobs:
       - name: Ping website to prevent inactivity
         run: curl -s https://your-render-app-url.onrender.com > /dev/null
 ```
+
+### Deployment Files
+
+This repository includes files to facilitate deployment:
+
+- **render.yaml** - Configuration for Render deployment with environment variables
+- **app/api/health/route.ts** - Health check endpoint for Render's service monitoring
 
 ## 🧰 Technology Stack
 

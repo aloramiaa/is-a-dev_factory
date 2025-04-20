@@ -1,0 +1,27 @@
+services:
+  - type: web
+    name: is-a-dev-factory
+    env: node
+    buildCommand: npm install -g pnpm && pnpm install && pnpm build
+    startCommand: pnpm start
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: GITHUB_CLIENT_ID
+        sync: false
+      - key: GITHUB_CLIENT_SECRET
+        sync: false
+      - key: NEXTAUTH_SECRET
+        generateValue: true
+      - key: NEXTAUTH_URL
+        fromService:
+          name: is-a-dev-factory
+          type: web
+          property: url
+      - key: GITHUB_REPO_OWNER
+        value: is-a-dev
+      - key: GITHUB_REPO_NAME
+        value: register
+      - key: GITHUB_API_TOKEN
+        sync: false 
